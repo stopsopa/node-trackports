@@ -94,6 +94,8 @@ const db = storeCreator(file);
 
                     p.lastTimeParsed = now();
 
+                    p.raw = data.raw;
+
                     tmp.list[p.port] = p;
                 });
 
@@ -112,7 +114,7 @@ const db = storeCreator(file);
                     p = pp;
                 }
 
-                db.write(data);
+                db.write(tmp);
             })
             .then(() => readWithDelay())
             .catch(e => {
