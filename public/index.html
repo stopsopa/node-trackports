@@ -23,20 +23,60 @@
 
         const log=(function(){try{return console.log}catch(e){return function(){}}}());
 
+        const delay = (time, data) =>
+            new Promise(
+                resolve => time ? setTimeout(resolve, time, data) : resolve(data)
+            )
+        ;
+
         class Root extends React.Component {
             constructor(...args) {
 
                 super(...args);
 
                 this.state = {
-                    data    : this.props.data,
-                    order   : 'port',
-                    asc     : true,
+                    data                : this.props.data,
+                    order               : 'port',
+                    asc                 : true,
+                    savingCommentPort   : false,
                 }
+            }
+            onChangeComment = (port, comment) => {
+
+                this.setState(prevState => {
+
+                    const data = JSON.parse(JSON.stringify(prevState));
+
+                    data.data[port].comment = comment;
+
+                    return data;
+                });
+            }
+            onSaveComment = (port, comment) => {
+
+                this.setState({savingCommentPort:port});
+
+                fetch('/save-comment', {
+                    method: "POST",
+                    headers: {
+                        'Content-type': 'application/json; charset=utf-8',
+                    },
+                    body: JSON.stringify({
+                        port,
+                        comment,
+                    })
+                })
+                    .then(() => delay(500))
+                    .then(() => {
+                        this.setState({savingCommentPort:false});
+                    })
+                ;
             }
             render() {
 
-                const { order, asc } = this.state;
+                const { order, asc, savingCommentPort } = this.state;
+
+                const { now } = this.props;
 
                 const list = Object.values(this.state.data).sort(function (a, b) {
 
@@ -45,7 +85,14 @@
                         return 0;
                     }
 
-                    return (a[order] > b[order] && asc) ? 1 : -1;
+                    if (asc) {
+
+                        return a[order] > b[order] ? 1 : -1;
+                    }
+                    else {
+
+                        return a[order] > b[order] ? -1 : 1;
+                    }
                 });
 
                 return (
@@ -56,14 +103,14 @@
                                     <th>#</th>
                                     <th>
                                         <input type="radio" name="order"
-                                               checked={this.state.order === 'port' && this.state.asc === true}
+                                               defaultChecked={this.state.order === 'port' && this.state.asc === true}
                                                onClick={() => this.setState({
                                                    order   : 'port',
                                                    asc     : true,
                                                })}
                                         />
                                         <input type="radio" name="order"
-                                               checked={this.state.order === 'port' && this.state.asc === false}
+                                               defaultChecked={this.state.order === 'port' && this.state.asc === false}
                                                onClick={() => this.setState({
                                                    order   : 'port',
                                                    asc     : false,
@@ -73,14 +120,14 @@
                                     </th>
                                     <th>
                                         <input type="radio" name="order"
-                                               checked={this.state.order === 'lastTimeParsed' && this.state.asc === true}
+                                               defaultChecked={this.state.order === 'lastTimeParsed' && this.state.asc === true}
                                                onClick={() => this.setState({
                                                    order   : 'lastTimeParsed',
                                                    asc     : true,
                                                })}
                                         />
                                         <input type="radio" name="order"
-                                               checked={this.state.order === 'lastTimeParsed' && this.state.asc === false}
+                                               defaultChecked={this.state.order === 'lastTimeParsed' && this.state.asc === false}
                                                onClick={() => this.setState({
                                                    order   : 'lastTimeParsed',
                                                    asc     : false,
@@ -90,14 +137,14 @@
                                     </th>
                                     <th>
                                         <input type="radio" name="order"
-                                               checked={this.state.order === 'proc' && this.state.asc === true}
+                                               defaultChecked={this.state.order === 'proc' && this.state.asc === true}
                                                onClick={() => this.setState({
                                                    order   : 'proc',
                                                    asc     : true,
                                                })}
                                         />
                                         <input type="radio" name="order"
-                                               checked={this.state.order === 'proc' && this.state.asc === false}
+                                               defaultChecked={this.state.order === 'proc' && this.state.asc === false}
                                                onClick={() => this.setState({
                                                    order   : 'proc',
                                                    asc     : false,
@@ -109,11 +156,23 @@
                             </thead>
                             <tbody>
                                 {list.map((n, i) => (
-                                    <tr>
-                                        <td>{i+1}</td>
-                                        <td>{n.port}</td>
-                                        <td>{n.lastTimeParsed}</td>
-                                        <td>{n.proc}</td>
+                                    <tr key={n.port}>
+                                        <td width="20">{i+1}</td>
+                                        <td width="40">{n.port}</td>
+                                        <td width="170" className={(n.lastTimeParsed.indexOf(now) === 0) ? '' : 'gray'}>{n.lastTimeParsed}</td>
+                                        <td width="370">{n.proc}</td>
+                                        <td className="comment">
+                                            {
+                                                (n.port === savingCommentPort) ?
+                                                    'Saving...' :
+                                                    <input
+                                                        type="text"
+                                                        value={n.comment || ''}
+                                                        onChange={e => this.onChangeComment(n.port, e.target.value)}
+                                                        onBlur={e => this.onSaveComment(n.port, e.target.value)}
+                                                    />
+                                            }
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -123,13 +182,19 @@
             }
         }
 
-        fetch('/data')
+        fetch('/data',{
+            // method: 'post',
+            // headers: {
+            //     'Content-type': 'application/json; charset=utf-8',
+            // },
+        })
             .then(res => res.json())
             .then(json => {
 
                 ReactDOM.render(
                     <Root
                         data={json.list}
+                        now={json.now}
                     />,
                     document.getElementById('app')
                 );

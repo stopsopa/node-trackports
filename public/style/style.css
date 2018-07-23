@@ -1,8 +1,21 @@
 table {
     border-collapse: collapse;
+    width: 98%;
 }
 td {
     font-family: 'Open Sans', sans-serif;
     border: 1px solid gray;
     padding: 2px 5px;
+}
+.gray {
+    color: gray;
+}
+.comment {
+    font-size: 11px;
+}
+.comment input {
+    margin: 0;
+    padding: 0;
+    border: none;
+    width: 100%;
 }

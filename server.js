@@ -9,6 +9,8 @@ const auth          = require('basic-auth');
 
 const express       = require('express');
 
+const bodyParser    = require('body-parser');
+
 // https://stackoverflow.com/a/23613092
 const serveIndex    = require('serve-index')
 
@@ -64,6 +66,8 @@ if ( ! process.env.FILE ) {
     throw `process.env.FILE is not defined`;
 }
 
+const now = () => (new Date()).toISOString().substring(0, 19).replace('T', ' ');
+
 const file = path.resolve(__dirname, process.env.FILE);
 
 const db = storeCreator(file);
@@ -73,8 +77,6 @@ const db = storeCreator(file);
     let readWithDelay;
 
     let p = '';
-
-    const now = () => (new Date()).toISOString().substring(0, 19).replace('T', ' ');
 
     const read = () => {
 
@@ -95,6 +97,14 @@ const db = storeCreator(file);
                     p.lastTimeParsed = now();
 
                     p.raw = data.raw;
+
+                    if (tmp.list[p.port]) {
+
+                        p = {
+                            ...tmp.list[p.port],
+                            ...p,
+                        };
+                    }
 
                     tmp.list[p.port] = p;
                 });
@@ -147,6 +157,47 @@ app.use((req, res, next) => {
     next()
 });
 
+app.use(bodyParser.json())
+
+app.all('/data', (req, res) => {
+
+    res.setHeader('Content-type', 'application/json; charset=utf-8');
+
+    const data = db.read();
+
+    data.now = (new Date()).toISOString().substring(0, 16).replace('T', ' ');
+
+    // res.setHeader('Allow', 'POST')
+
+    return res.end(JSON.stringify(data));
+});
+
+app.post('/save-comment', (req, res) => {
+
+    res.setHeader('Content-type', 'application/json; charset=utf-8');
+
+    const debug = {};
+
+    const json = req.body;
+
+    debug.body = json;
+
+    const data = db.read();
+
+    debug.dbBefore = JSON.parse(JSON.stringify(data));
+
+    if (data.list && data.list[json.port]) {
+
+        data.list[json.port].comment = json.comment;
+    }
+
+    debug.dbAfter = JSON.parse(JSON.stringify(data));
+
+    const write = db.write(data);
+
+    return res.end(JSON.stringify({ok: true, debug, write}));
+});
+
 const web = path.resolve(__dirname, 'public');
 
 app.use(express.static(web, { // http://expressjs.com/en/resources/middleware/serve-static.html
@@ -164,13 +215,6 @@ app.use(express.static(web, { // http://expressjs.com/en/resources/middleware/se
     //     // res.setHeader('Cache-Control', 'public, only-if-cached')
     // }
 }), serveIndex(web, {'icons': true})); // https://stackoverflow.com/a/23613092
-
-app.all('/data', (req, res) => {
-
-    res.setHeader('Content-type', 'application/json; charset=utf-8');
-
-    return res.end(JSON.stringify(db.read()));
-});
 
 app.listen(process.env.PORT, process.env.HOST, () => {
 
