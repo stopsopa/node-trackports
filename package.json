@@ -2,6 +2,8 @@
   "dependencies": {
     "basic-auth": "^2.0.0",
     "express": "^4.16.3",
+    "forever": "^0.15.3",
+    "serve-index": "^1.9.1",
     "shelljs": "^0.8.2"
   }
 }
