@@ -1,0 +1,8 @@
+table {
+    border-collapse: collapse;
+}
+td {
+    font-family: 'Open Sans', sans-serif;
+    border: 1px solid gray;
+    padding: 2px 5px;
+}

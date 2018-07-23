@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Ports</title>
+    <script src="/js/react.development.js"></script>
+    <script src="/js/react-dom.development.js"></script>
+    <script src="/js/babel.min.js"></script>
+    <link rel="stylesheet" href="/style/style.css">
+    <script type="text/babel">
+
+        const log=(function(){try{return console.log}catch(e){return function(){}}}());
+
+        class Root extends React.Component {
+            constructor(...args) {
+
+                super(...args);
+
+                this.state = {
+                    data    : this.props.data,
+                    order   : 'port',
+                    asc     : true,
+                }
+            }
+            render() {
+
+                const { order, asc } = this.state;
+
+                const list = Object.values(this.state.data).sort(function (a, b) {
+
+                    if (a[order] === b[order]) {
+
+                        return 0;
+                    }
+
+                    return (a[order] > b[order] && asc) ? 1 : -1;
+                });
+
+                return (
+                    <div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>
+                                        <input type="radio" name="order"
+                                               checked={this.state.order === 'port' && this.state.asc === true}
+                                               onClick={() => this.setState({
+                                                   order   : 'port',
+                                                   asc     : true,
+                                               })}
+                                        />
+                                        <input type="radio" name="order"
+                                               checked={this.state.order === 'port' && this.state.asc === false}
+                                               onClick={() => this.setState({
+                                                   order   : 'port',
+                                                   asc     : false,
+                                               })}
+                                        />
+                                        port
+                                    </th>
+                                    <th>
+                                        <input type="radio" name="order"
+                                               checked={this.state.order === 'lastTimeParsed' && this.state.asc === true}
+                                               onClick={() => this.setState({
+                                                   order   : 'lastTimeParsed',
+                                                   asc     : true,
+                                               })}
+                                        />
+                                        <input type="radio" name="order"
+                                               checked={this.state.order === 'lastTimeParsed' && this.state.asc === false}
+                                               onClick={() => this.setState({
+                                                   order   : 'lastTimeParsed',
+                                                   asc     : false,
+                                               })}
+                                        />
+                                        last time parsed
+                                    </th>
+                                    <th>
+                                        <input type="radio" name="order"
+                                               checked={this.state.order === 'proc' && this.state.asc === true}
+                                               onClick={() => this.setState({
+                                                   order   : 'proc',
+                                                   asc     : true,
+                                               })}
+                                        />
+                                        <input type="radio" name="order"
+                                               checked={this.state.order === 'proc' && this.state.asc === false}
+                                               onClick={() => this.setState({
+                                                   order   : 'proc',
+                                                   asc     : false,
+                                               })}
+                                        />
+                                        proc
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {list.map((n, i) => (
+                                    <tr>
+                                        <td>{i+1}</td>
+                                        <td>{n.port}</td>
+                                        <td>{n.lastTimeParsed}</td>
+                                        <td>{n.proc}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            }
+        }
+
+        fetch('/data')
+            .then(res => res.json())
+            .then(json => {
+
+                ReactDOM.render(
+                    <Root
+                        data={json.result}
+                    />,
+                    document.getElementById('app')
+                );
+            })
+        ;
+
+    </script>
+</head>
+<body>
+    <div id="app">
+        Loading ...
+    </div>
+</body>
+</html>
