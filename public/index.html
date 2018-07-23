@@ -85,6 +85,16 @@
                         return 0;
                     }
 
+                    if (!a[order] && b[order]) {
+
+                        return 1;
+                    }
+
+                    if (!b[order] && a[order]) {
+
+                        return -1;
+                    }
+
                     if (asc) {
 
                         return a[order] > b[order] ? 1 : -1;
@@ -152,13 +162,30 @@
                                         />
                                         proc
                                     </th>
+                                    <th>
+                                        <input type="radio" name="order"
+                                               defaultChecked={this.state.order === 'comment' && this.state.asc === true}
+                                               onClick={() => this.setState({
+                                                   order   : 'comment',
+                                                   asc     : true,
+                                               })}
+                                        />
+                                        <input type="radio" name="order"
+                                               defaultChecked={this.state.order === 'comment' && this.state.asc === false}
+                                               onClick={() => this.setState({
+                                                   order   : 'comment',
+                                                   asc     : false,
+                                               })}
+                                        />
+                                        comments
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {list.map((n, i) => (
                                     <tr key={n.port}>
                                         <td width="20">{i+1}</td>
-                                        <td width="40">{n.port}</td>
+                                        <td width="80">{n.port}</td>
                                         <td width="170" className={(n.lastTimeParsed.indexOf(now) === 0) ? '' : 'gray'}>{n.lastTimeParsed}</td>
                                         <td width="370">{n.proc}</td>
                                         <td className="comment">
